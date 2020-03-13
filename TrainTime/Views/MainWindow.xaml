@@ -1,0 +1,19 @@
+﻿<Window xmlns:Views="clr-namespace:TrainTime.Views"  x:Class="TrainTime.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:prism="http://prismlibrary.com/"
+        prism:ViewModelLocator.AutoWireViewModel="True"
+        Title="{Binding Title}" SizeToContent="WidthAndHeight" Top="{Binding Top}" Left="{Binding Left}"
+        AllowsTransparency="True" WindowStyle="None" Background="DimGray" Opacity="0.85" IsHitTestVisible="True"
+        ShowInTaskbar="False" Topmost="False">
+    <Grid>
+        <ContentControl prism:RegionManager.RegionName="ContentRegion" />
+        <ItemsControl ItemsSource="{Binding TrainPanel}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Views:TrainTip DataContext="{Binding}"></Views:TrainTip>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</Window>
