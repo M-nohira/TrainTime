@@ -11,7 +11,8 @@ namespace TrainTime.Models
         public string StationName { get; set; }
 
         public DateTime Date { get; set; }
-        public Dictionary<int, List<TrainTimeDatum>> TimeTable { get; set; } = new Dictionary<int, List<TrainTimeDatum>>();
+        //public Dictionary<int, List<TrainTimeDatum>> TimeTable { get; set; } = new Dictionary<int, List<TrainTimeDatum>>();
+        public List<TrainTimeDatum> TimeTable { get; set; } = new List<TrainTimeDatum>();
 
     }
 

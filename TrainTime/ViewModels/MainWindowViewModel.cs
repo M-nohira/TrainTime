@@ -68,7 +68,7 @@ namespace TrainTime.ViewModels
         {
             Initialize();
 
-            worker = new System.Timers.Timer(1);
+            worker = new System.Timers.Timer(500);
             worker.Enabled = true;
             worker.AutoReset = true;
             worker.Elapsed += Worker_Elapsed;
@@ -118,19 +118,36 @@ namespace TrainTime.ViewModels
         /// <returns></returns>
         private bool AddNextTrain(DateTime offset, int number = 1)
         {
+            if (number <= 0) return true;
             int cnt = 0;
-            var sample = TimeTable.TimeTable[12][0];
-            var timeTableDate = new DateTime(sample.Time.Year, sample.Time.Month, sample.Time.Day);
-            foreach (var key in TimeTable.TimeTable.Keys)
+            //var sample = TimeTable.TimeTable[12][0];
+            //var timeTableDate = new DateTime(sample.Time.Year, sample.Time.Month, sample.Time.Day);
+            /*foreach (var key in TimeTable.TimeTable.Keys)
             {                
                 foreach (var t in TimeTable.TimeTable[key])
                 {
                     if (t.Time > offset)
                     {
-                        System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => { TrainPanel.Add(new TrainTipViewModel(t.TrainStyle, t.TrainStyle.GetStringValue(), t.DestStationName, t.Time)); }));
+                        System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => 
+                        { 
+                            TrainPanel.Add(new TrainTipViewModel(t.TrainStyle, t.TrainStyle.GetStringValue(), t.DestStationName, t.Time));
+                        
+                        }));
                         cnt++;
                         if (cnt >= number) return true;
                     }
+                }
+            }*/
+            foreach(var t in TimeTable.TimeTable)
+            {
+                if (t.Time > offset)
+                {
+                    System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        TrainPanel.Add(new TrainTipViewModel(t.TrainStyle, t.TrainStyle.GetStringValue(), t.DestStationName, t.Time));
+                    }));
+                    cnt++;
+                    if (cnt >= number) return true;
                 }
             }
             return false;
@@ -176,10 +193,12 @@ namespace TrainTime.ViewModels
                     d.Time = time;
                     if (isNextDay)
                         d.Time = d.Time.AddDays(1);
-                    datum.Add(d);
+                    //datum.Add(d);
+                    TimeTable.TimeTable.Add(d);
                     destcnt++;
                 }
-                TimeTable.TimeTable.Add(Convert.ToInt32(hour[0].TextContent), datum);
+                //TimeTable.TimeTable.Add(Convert.ToInt32(hour[0].TextContent), datum);
+                //TimeTable.TimeTable.Add(datum);
 
             }
             if (AddNextTrain(DateTime.Now, 3 - TrainPanel.Count)) return;
