@@ -18,5 +18,7 @@ dotnetCore3.0で開発されています. dotnetCore3.0のSDKとRuntimeをイン
 `.sln`ファイルのある階層でコマンド`dotnet publish -c Release`と入力すれば生成されます
 ### パターン2
 VisualStudioで`.sln`ファイルを開きビルドする
+## 終了方法
+現状はタスクマネージャーから終了してください
 ## ライセンス
 - MIT
