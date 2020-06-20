@@ -68,6 +68,8 @@ namespace TrainTime.ViewModels
         {
             Initialize();
 
+            NotifyIcon icon = new NotifyIcon();
+
             worker = new System.Timers.Timer(500);
             worker.Enabled = true;
             worker.AutoReset = true;

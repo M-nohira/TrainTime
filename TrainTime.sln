@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrainTime", "TrainTime\TrainTime.csproj", "{644612AC-F6A7-46C3-B8F5-129D96D66FCB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrainTime", "TrainTime\TrainTime.csproj", "{644612AC-F6A7-46C3-B8F5-129D96D66FCB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugin_Base", "Plugin_Base\Plugin_Base.csproj", "{A87F113A-AB94-4EB8-A5FD-362414E5D5D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{644612AC-F6A7-46C3-B8F5-129D96D66FCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{644612AC-F6A7-46C3-B8F5-129D96D66FCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{644612AC-F6A7-46C3-B8F5-129D96D66FCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A87F113A-AB94-4EB8-A5FD-362414E5D5D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A87F113A-AB94-4EB8-A5FD-362414E5D5D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A87F113A-AB94-4EB8-A5FD-362414E5D5D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A87F113A-AB94-4EB8-A5FD-362414E5D5D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
