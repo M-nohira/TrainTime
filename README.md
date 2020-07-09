@@ -1,5 +1,5 @@
 # TrainTime
-![見た目](https://gyazo.ingen084.net/3db6b39b8683a8a71f6f5557e3507c43)
+![見た目](https://github.com/M-nohira/TrainTime/blob/Plugin/vtBNGuIGVp.png)
 
 電車の時間を調べるのがとても面倒だったので自動化しました.
 
@@ -12,13 +12,27 @@
 これで私の学校がばれました
 
 ## ビルド方法
-dotnetCore3.0で開発されています. dotnetCore3.0のSDKとRuntimeをインストールしてください.
+dotnetCore3.1で開発されています. dotnetCore3.0のSDKとRuntimeをインストールしてください.
 [ここ](https://dotnet.microsoft.com/download/dotnet-core/3.0)にあります.
 ### パターン1
 `.sln`ファイルのある階層でコマンド`dotnet publish -c Release`と入力すれば生成されます
 ### パターン2
 VisualStudioで`.sln`ファイルを開きビルドする
+
+## トラブルシューティング
+### 起動しない
+生成実行ファイルと同じ階層に ` Plugins `フォルダは生成されていますか.
+生成されていたら中に` .dll `ファイルは存在しますか.  
+
 ## 終了方法
 現状はタスクマネージャーから終了してください
 ## ライセンス
 - MIT
+
+## 開発履歴
+### 0.0.0 初期バージョン
+自分の大学の最寄り駅のみに対応,
+
+### 0.0.1 プラグイン対応バージョン
+汎用化を目指すため, プラグインによって拡張できるように
+現在は, 時刻表取得のみ
