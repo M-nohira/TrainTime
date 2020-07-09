@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TrainTime.Models
+namespace Plugin_Base
 {
     public class StringValueAttribute:Attribute
     {

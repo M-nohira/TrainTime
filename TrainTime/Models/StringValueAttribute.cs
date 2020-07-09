@@ -4,6 +4,7 @@ using System.Text;
 
 namespace TrainTime.Models
 {
+    /*
     public class StringValueAttribute:Attribute
     {
         public string Svalue { get; protected set; }
@@ -33,5 +34,5 @@ namespace TrainTime.Models
             return attribs.Length > 0 ? attribs[0].Svalue : null;
 
         }
-    }
+    }*/
 }

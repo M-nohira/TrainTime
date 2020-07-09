@@ -1,18 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <AssemblyName>TrainTime</AssemblyName>
     <PublishSingleFIle>true</PublishSingleFIle>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <ApplicationIcon>タイトルなし.ico</ApplicationIcon>
+    <StartupObject>TrainTime.App</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.13.0" />
+    <PackageReference Include="AngleSharp" Version="0.14.0" />
     <PackageReference Include="Prism.Unity" Version="7.2.0.1367" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Plugin_Base\Plugin_Base.csproj" />
   </ItemGroup>
 </Project>

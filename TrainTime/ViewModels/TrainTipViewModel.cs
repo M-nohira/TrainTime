@@ -15,14 +15,14 @@ namespace TrainTime.ViewModels
         /// <param name="isRapid">Rapid / Local</param>
         /// <param name="dest">Destination</param>
         /// <param name="time">ArrivalTime</param>
-        public TrainTipViewModel(TrainStyle trainStyle,string style, string dest, DateTime time)
+        public TrainTipViewModel(Plugin_Base.TrainStyle trainStyle,string style, string dest, DateTime time)
         {
             Style = style;
             switch(trainStyle)
             {
-                case TrainStyle.local: StyleColor = new SolidColorBrush(Color.FromArgb(255, 0, 104, 183)); break;
-                case TrainStyle.rapid: StyleColor = new SolidColorBrush(Color.FromArgb(255, 233, 84, 100)); break;
-                case TrainStyle.commuterRapid: StyleColor = new SolidColorBrush(Colors.OrangeRed);break;
+                case Plugin_Base.TrainStyle.local: StyleColor = new SolidColorBrush(Color.FromArgb(255, 0, 104, 183)); break;
+                case Plugin_Base.TrainStyle.rapid: StyleColor = new SolidColorBrush(Color.FromArgb(255, 233, 84, 100)); break;
+                case Plugin_Base.TrainStyle.commuterRapid: StyleColor = new SolidColorBrush(Colors.OrangeRed);break;
             }
             Dest = dest;
             DTime = time;

@@ -8,8 +8,12 @@ using System;
 using TrainTime.Models;
 using AngleSharp;
 using System.Windows.Forms;
-//using System.Threading;
-
+using System.Reflection;
+using System.Runtime.Loader;
+using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
+using Plugin_Base;
 
 namespace TrainTime.ViewModels
 {
@@ -59,13 +63,19 @@ namespace TrainTime.ViewModels
             }
         }
 
+        public int TrainPanelLimitCount { get; set; } = 3;
 
         private System.Timers.Timer worker;
 
-        public TrainTimeTable TimeTable { get; set; } = new TrainTimeTable();
+        public delegate Plugin_Base.TrainTimeTable setTimeTabeFromWeb(bool isNextDay, bool IsHoliday);
+        public setTimeTabeFromWeb SetTimeTabeFromWeb { get; set; }
+
+        //public TrainTimeTable TimeTable { get; set; } = new TrainTimeTable();
+        public Plugin_Base.TrainTimeTable TimeTable { get; set; }//ここまで
 
         public MainWindowViewModel()
         {
+            LoadPlugin(@".\plugins"); //起動ファイル直下のpluginsフォルダを検索
             Initialize();
 
             NotifyIcon icon = new NotifyIcon();
@@ -80,8 +90,35 @@ namespace TrainTime.ViewModels
         ~MainWindowViewModel()
         {
             worker.Elapsed -= Worker_Elapsed;
-            //W32.RedrawWindow(_workerw, , new W32.RECT(,), W32.RedrawWindowFlags.UpdateNow);
+
             worker.Dispose();
+        }
+
+        public void LoadPlugin(string pluginDirectoryPath)
+        {
+            if (!Directory.Exists(pluginDirectoryPath)) //存在確認と生成
+                Directory.CreateDirectory(pluginDirectoryPath);
+
+            PluginWorker pwoker = new PluginWorker(pluginDirectoryPath);
+            List<string> libs = new List<string>();
+            foreach (var file in Directory.GetFiles(pluginDirectoryPath))
+            {
+                if (Path.GetExtension(file) == ".dll") libs.Add(file); //拡張子がdllのファイルを全取得
+                continue;
+            }
+            if (libs.Count == 0) throw new FileNotFoundException("No Plugin file in Plugin Directory");
+
+            List<ITrainTime> incetances = libs.SelectMany(path =>
+            {
+                Assembly asm = PluginWorker.LoadPlugin(path);
+                return PluginWorker.CreateCommands(asm);
+            }).ToList();
+            /*
+            var asm = PluginWorker.LoadPlugin(libs[0]);
+            List<ITrainTime> incetances = PluginWorker.CreateCommands(asm).ToList();
+            */
+            if (incetances.Count == 0) throw new FileLoadException("Failed To Load Plugin");
+            SetTimeTabeFromWeb += incetances[0].GetTimeTable;
         }
 
         private void SetLocation(Views.MainWindow window)
@@ -94,6 +131,7 @@ namespace TrainTime.ViewModels
         private void Worker_Elapsed(object sender, ElapsedEventArgs e)
         {
             SetLocation(Window);
+            LimitPanelCount(TrainPanelLimitCount);
             if (TrainPanel.Count <= 0) return;
             if (TrainPanel[0].DTime <= DateTime.Now)
             {
@@ -101,15 +139,23 @@ namespace TrainTime.ViewModels
                 {
                     RemoveTrain(0); return;
                 };
-                SetTimeTabeFromWeb(true, IsHoliday(DateTime.Now.AddDays(1)));
+                
+                TimeTable = Task.Run(() => SetTimeTabeFromWeb(false, IsHoliday(DateTime.Now))).Result;
+            }
+        }
+        private void LimitPanelCount(int count = 3)
+        {
+            if (trainpanel.Count <= count) return;
+            for (int cnt = TrainPanel.Count; cnt > count; cnt--)
+            {
+                RemoveTrain(cnt - 1);
             }
         }
 
-
         private void Initialize()
         {
-            SetTimeTabeFromWeb(false, IsHoliday(DateTime.Now));//日付を確認するコードが必要
-
+            TimeTable = Task.Run(() => SetTimeTabeFromWeb(false, IsHoliday(DateTime.Now))).Result;
+            AddNextTrain(DateTime.Now, TrainPanelLimitCount);
         }
 
         /// <summary>
@@ -122,31 +168,13 @@ namespace TrainTime.ViewModels
         {
             if (number <= 0) return true;
             int cnt = 0;
-            //var sample = TimeTable.TimeTable[12][0];
-            //var timeTableDate = new DateTime(sample.Time.Year, sample.Time.Month, sample.Time.Day);
-            /*foreach (var key in TimeTable.TimeTable.Keys)
-            {                
-                foreach (var t in TimeTable.TimeTable[key])
-                {
-                    if (t.Time > offset)
-                    {
-                        System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => 
-                        { 
-                            TrainPanel.Add(new TrainTipViewModel(t.TrainStyle, t.TrainStyle.GetStringValue(), t.DestStationName, t.Time));
-                        
-                        }));
-                        cnt++;
-                        if (cnt >= number) return true;
-                    }
-                }
-            }*/
-            foreach(var t in TimeTable.TimeTable)
+            foreach (var t in TimeTable.TimeTable)
             {
                 if (t.Time > offset)
                 {
                     System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        TrainPanel.Add(new TrainTipViewModel(t.TrainStyle, t.TrainStyle.GetStringValue(), t.DestStationName, t.Time));
+                        TrainPanel.Add(new TrainTipViewModel(t.Style, t.Style.GetStringValue(), t.DestStationName, t.Time));
                     }));
                     cnt++;
                     if (cnt >= number) return true;
@@ -157,54 +185,6 @@ namespace TrainTime.ViewModels
         private void RemoveTrain(int index)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => { TrainPanel.RemoveAt(index); }));
-        }
-
-        private async void SetTimeTabeFromWeb(bool isNextDay, bool isHoliday)
-        {
-            TimeTable = new TrainTimeTable();
-            var uri = "http://www.toyokosoku.co.jp/station/funabashinichidaimae";
-            var context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
-            var document = await context.OpenAsync(uri);
-            var query = isHoliday ? $"#tabs-3 > table:nth-child(2)" : $"#tabs-1 > table:nth-child(2)";
-            var result = document.QuerySelector(query);
-            var trs = result.QuerySelectorAll("tr");
-            TimeTable.StationCode = 9933805;
-            TimeTable.StationName = document.Title;
-
-            for (int count = 0; count <= trs.Length - 1; count += 2)
-            {
-                List<TrainTimeDatum> datum = new List<TrainTimeDatum>();
-                var hour = trs[count].QuerySelectorAll("td"); //最初の文字が時間
-                var minute = trs[count + 1].QuerySelectorAll("td");//分のみ
-
-                int destcnt = 1;
-                foreach (var t in minute)
-                {
-                    var d = new TrainTimeDatum();
-                    d.DestStationName = "中野";
-                    d.TrainStyle = TrainStyle.local;
-                    if (hour[destcnt].TextContent.Contains("三")) d.DestStationName = "三鷹";
-                    if (hour[destcnt].TextContent.Contains("東")) d.DestStationName = "東陽町";
-                    if (hour[destcnt].TextContent.Contains("▲")) d.TrainStyle = TrainStyle.rapid;
-                    if (hour[destcnt].TextContent.Contains("●")) d.TrainStyle = TrainStyle.commuterRapid;
-                    d.IsHoliday = isHoliday;
-                    var time = new DateTime();
-                    if (t.TextContent.Length <= 0) continue;
-
-                    if (!DateTime.TryParse($"{hour[0].TextContent}:{t.TextContent}", out time)) continue;
-                    d.Time = time;
-                    if (isNextDay)
-                        d.Time = d.Time.AddDays(1);
-                    //datum.Add(d);
-                    TimeTable.TimeTable.Add(d);
-                    destcnt++;
-                }
-                //TimeTable.TimeTable.Add(Convert.ToInt32(hour[0].TextContent), datum);
-                //TimeTable.TimeTable.Add(datum);
-
-            }
-            if (AddNextTrain(DateTime.Now, 3 - TrainPanel.Count)) return;
-            SetTimeTabeFromWeb(true, IsHoliday(DateTime.Now.AddDays(1)));
         }
 
         private bool IsHoliday(DateTime date)
