@@ -69,8 +69,11 @@ namespace TrainTime.ViewModels
 
         private System.Timers.Timer worker;
 
+
+        public List<ITrainTime> Plugin_Incetance { get; set; } = new List<ITrainTime>();
+
         public delegate Plugin_Base.TrainTimeTable setTimeTableFromWeb(bool isNextDay, bool IsHoliday);
-        public List<setTimeTableFromWeb> SetTimeTableFromWeb { get; set; } = new List<setTimeTableFromWeb>();
+        public setTimeTableFromWeb SetTimeTableFromWeb { get; set; } //= new List<setTimeTableFromWeb>();
 
         //public TrainTimeTable TimeTable { get; set; } = new TrainTimeTable();
         public Plugin_Base.TrainTimeTable TimeTable { get; set; }//ここまで
@@ -78,14 +81,18 @@ namespace TrainTime.ViewModels
         public MainWindowViewModel()
         {
             LoadPlugin(@".\plugins"); //起動ファイル直下のpluginsフォルダを検索
+
             Initialize();
 
             var items = new List<ToolStripItem>();
+
+           
             var item = new ToolStripMenuItem
             { Text = "EXIT" };
             item.Click += (sender, e) => { Environment.Exit(0); };
 
             items.Add(item);
+            items.AddRange(SetToolStripMenu());
 
             NotifyIcon icon = new NotifyIcon(items);
 
@@ -95,6 +102,28 @@ namespace TrainTime.ViewModels
             worker.Elapsed += Worker_Elapsed;
             worker.Start();
 
+        }
+
+        public List<ToolStripItem> SetToolStripMenu()
+        {
+            var result = new List<ToolStripItem>();
+            Plugin_Incetance.ForEach(x =>
+            {
+                var item = new ToolStripMenuItem()
+                {
+                    Name = x.Name,
+                    Text = x.StationName,
+                    CheckOnClick = true,
+                };
+
+                item.CheckedChanged += (sender, args) =>
+                {
+                    var obj = (ToolStripMenuItem) sender;
+                    SetTimeTableFromWeb = Plugin_Incetance.Where(x => x.Name == obj.Name).ToList()[0].GetTimeTable;
+                };
+                result.Add(item);
+            });
+            return result;
         }
         ~MainWindowViewModel()
         {
@@ -108,13 +137,16 @@ namespace TrainTime.ViewModels
             if (!Directory.Exists(pluginDirectoryPath)) //存在確認と生成
                 Directory.CreateDirectory(pluginDirectoryPath);
 
-            PluginWorker pwoker = new PluginWorker(pluginDirectoryPath);
-            var libs = new List<string>();
-            foreach (var file in Directory.GetFiles(pluginDirectoryPath))
-            {
-                if (Path.GetExtension(file) == ".dll") libs.Add(file); //拡張子がdllのファイルを全取得
-                continue;
-            }
+            //PluginWorker pwoker = new PluginWorker(pluginDirectoryPath);
+
+
+            var libs = Directory.GetFiles(pluginDirectoryPath).Where(x => Path.GetExtension(x) == ".dll").ToList();
+
+            //foreach (var file in Directory.GetFiles(pluginDirectoryPath))
+            //{
+            //    if (Path.GetExtension(file) == ".dll") libs.Add(file); //拡張子がdllのファイルを全取得
+
+            //}
             if (libs.Count == 0) throw new FileNotFoundException("No Plugin file in Plugin Directory");
 
             List<ITrainTime> incetances = libs.SelectMany(path =>
@@ -122,9 +154,11 @@ namespace TrainTime.ViewModels
                 Assembly asm = PluginWorker.LoadPlugin(path);
                 return PluginWorker.CreateCommands(asm);
             }).ToList();
-            
+
             if (incetances.Count == 0) throw new FileLoadException("Failed To Load Plugin");
-            incetances.ForEach(x => SetTimeTableFromWeb.Add(x.GetTimeTable));
+            Plugin_Incetance = incetances;
+            SetTimeTableFromWeb = incetances[0].GetTimeTable;
+            // incetances.ForEach(x => SetTimeTableFromWeb.Add(x.GetTimeTable));
             //SetTimeTableFromWeb = incetances[0].GetTimeTable;
         }
 
@@ -151,7 +185,8 @@ namespace TrainTime.ViewModels
                 RemoveTrain(0); return;
             };
 
-            TimeTable = Task.Run(() => SetTimeTableFromWeb[_usedLib](false, IsHoliday(DateTime.Now))).Result;
+            TimeTable = Task.Run(() => SetTimeTableFromWeb(false, IsHoliday(DateTime.Now))).Result;
+
 
         }
         private void LimitPanelCount(int count = 3)
@@ -164,7 +199,7 @@ namespace TrainTime.ViewModels
 
         private void Initialize()
         {
-            TimeTable = Task.Run(() => SetTimeTableFromWeb[_usedLib](false, IsHoliday(DateTime.Now))).Result;
+            TimeTable = Task.Run(() => SetTimeTableFromWeb(false, IsHoliday(DateTime.Now))).Result;
             AddNextTrain(DateTime.Now, TrainPanelLimitCount);
         }
 
