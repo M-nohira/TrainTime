@@ -23,6 +23,8 @@ namespace TrainTime.ViewModels
 
         public static Views.MainWindow Window { get; set; }
 
+        public int _usedLib = 0;
+
         private string _title = "TrainTimeTableViewer";
         public string Title
         {
@@ -30,16 +32,16 @@ namespace TrainTime.ViewModels
             set { SetProperty(ref _title, value); }
         }
 
-        private ObservableCollection<TrainTipViewModel> trainpanel = new ObservableCollection<TrainTipViewModel>();
+        private ObservableCollection<TrainTipViewModel> _trainpanel = new ObservableCollection<TrainTipViewModel>();
         public ObservableCollection<TrainTipViewModel> TrainPanel
         {
             get
             {
-                return trainpanel;
+                return _trainpanel;
             }
             set
             {
-                SetProperty(ref trainpanel, value);
+                SetProperty(ref _trainpanel, value);
             }
         }
 
@@ -67,8 +69,8 @@ namespace TrainTime.ViewModels
 
         private System.Timers.Timer worker;
 
-        public delegate Plugin_Base.TrainTimeTable setTimeTabeFromWeb(bool isNextDay, bool IsHoliday);
-        public setTimeTabeFromWeb SetTimeTabeFromWeb { get; set; }
+        public delegate Plugin_Base.TrainTimeTable setTimeTableFromWeb(bool isNextDay, bool IsHoliday);
+        public List<setTimeTableFromWeb> SetTimeTableFromWeb { get; set; } = new List<setTimeTableFromWeb>();
 
         //public TrainTimeTable TimeTable { get; set; } = new TrainTimeTable();
         public Plugin_Base.TrainTimeTable TimeTable { get; set; }//ここまで
@@ -78,7 +80,14 @@ namespace TrainTime.ViewModels
             LoadPlugin(@".\plugins"); //起動ファイル直下のpluginsフォルダを検索
             Initialize();
 
-            NotifyIcon icon = new NotifyIcon();
+            var items = new List<ToolStripItem>();
+            var item = new ToolStripMenuItem
+            { Text = "EXIT" };
+            item.Click += (sender, e) => { Environment.Exit(0); };
+
+            items.Add(item);
+
+            NotifyIcon icon = new NotifyIcon(items);
 
             worker = new System.Timers.Timer(500);
             worker.Enabled = true;
@@ -100,7 +109,7 @@ namespace TrainTime.ViewModels
                 Directory.CreateDirectory(pluginDirectoryPath);
 
             PluginWorker pwoker = new PluginWorker(pluginDirectoryPath);
-            List<string> libs = new List<string>();
+            var libs = new List<string>();
             foreach (var file in Directory.GetFiles(pluginDirectoryPath))
             {
                 if (Path.GetExtension(file) == ".dll") libs.Add(file); //拡張子がdllのファイルを全取得
@@ -113,15 +122,17 @@ namespace TrainTime.ViewModels
                 Assembly asm = PluginWorker.LoadPlugin(path);
                 return PluginWorker.CreateCommands(asm);
             }).ToList();
-            /*
-            var asm = PluginWorker.LoadPlugin(libs[0]);
-            List<ITrainTime> incetances = PluginWorker.CreateCommands(asm).ToList();
-            */
+            
             if (incetances.Count == 0) throw new FileLoadException("Failed To Load Plugin");
-            SetTimeTabeFromWeb += incetances[0].GetTimeTable;
+            incetances.ForEach(x => SetTimeTableFromWeb.Add(x.GetTimeTable));
+            //SetTimeTableFromWeb = incetances[0].GetTimeTable;
         }
 
-        private void SetLocation(Views.MainWindow window)
+        /// <summary>
+        /// Set Window Location to Lower right
+        /// </summary>
+        /// <param name="window">window handle</param>
+        private static void SetLocation(Views.MainWindow window)
         {
             if (window == null | Handle == null) return;
             W32.MoveWindow(Handle, (int)(Screen.PrimaryScreen.WorkingArea.Width - window.ActualWidth), (int)(Screen.PrimaryScreen.WorkingArea.Height - window.ActualHeight), (int)window.ActualWidth, (int)window.ActualWidth, 1);
@@ -133,28 +144,27 @@ namespace TrainTime.ViewModels
             SetLocation(Window);
             LimitPanelCount(TrainPanelLimitCount);
             if (TrainPanel.Count <= 0) return;
-            if (TrainPanel[0].DTime <= DateTime.Now)
+            if (TrainPanel[0].DTime > DateTime.Now) return;
+
+            if (AddNextTrain(TrainPanel[^1].DTime, 1))
             {
-                if (AddNextTrain(TrainPanel[TrainPanel.Count - 1].DTime, 1))
-                {
-                    RemoveTrain(0); return;
-                };
-                
-                TimeTable = Task.Run(() => SetTimeTabeFromWeb(false, IsHoliday(DateTime.Now))).Result;
-            }
+                RemoveTrain(0); return;
+            };
+
+            TimeTable = Task.Run(() => SetTimeTableFromWeb[_usedLib](false, IsHoliday(DateTime.Now))).Result;
+
         }
         private void LimitPanelCount(int count = 3)
         {
-            if (trainpanel.Count <= count) return;
-            for (int cnt = TrainPanel.Count; cnt > count; cnt--)
-            {
+            if (_trainpanel.Count <= count) return;
+            for (var cnt = TrainPanel.Count; cnt > count; cnt--)
                 RemoveTrain(cnt - 1);
-            }
+
         }
 
         private void Initialize()
         {
-            TimeTable = Task.Run(() => SetTimeTabeFromWeb(false, IsHoliday(DateTime.Now))).Result;
+            TimeTable = Task.Run(() => SetTimeTableFromWeb[_usedLib](false, IsHoliday(DateTime.Now))).Result;
             AddNextTrain(DateTime.Now, TrainPanelLimitCount);
         }
 
@@ -167,27 +177,28 @@ namespace TrainTime.ViewModels
         private bool AddNextTrain(DateTime offset, int number = 1)
         {
             if (number <= 0) return true;
-            int cnt = 0;
-            foreach (var t in TimeTable.TimeTable)
+
+            foreach (var x in TimeTable.TimeTable.Where(x => x.Time > offset).OrderBy(x => x.Time).Take(number))
             {
-                if (t.Time > offset)
+                Invoke(() =>
                 {
-                    System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        TrainPanel.Add(new TrainTipViewModel(t.Style, t.Style.GetStringValue(), t.DestStationName, t.Time));
-                    }));
-                    cnt++;
-                    if (cnt >= number) return true;
-                }
+                    TrainPanel.Add(new TrainTipViewModel(x.StyleColor, x.Style, x.DestStationName, x.Time));
+                });
             }
-            return false;
-        }
-        private void RemoveTrain(int index)
-        {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => { TrainPanel.RemoveAt(index); }));
+            return true;
         }
 
-        private bool IsHoliday(DateTime date)
+        private void RemoveTrain(int index)
+        {
+            Invoke(() => { TrainPanel.RemoveAt(index); });
+        }
+
+        private static void Invoke(Action action)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(action);
+        }
+
+        private static bool IsHoliday(DateTime date)
         {
             if (date.DayOfWeek == DayOfWeek.Sunday || date.DayOfWeek == DayOfWeek.Saturday) return true; //土日判断
 

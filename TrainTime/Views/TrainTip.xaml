@@ -8,10 +8,11 @@
              prism:ViewModelLocator.AutoWireViewModel="False"
              mc:Ignorable="d" Height="70" >
 
-    <Border BorderBrush="{Binding StyleColor}" BorderThickness="4">
+    <Border BorderBrush="{Binding StyleColorBrush}" BorderThickness="4">
         <Grid>
+            
             <StackPanel Orientation="Horizontal">
-                <TextBlock Name="TrainType" HorizontalAlignment="Left" Text="{Binding Style}" FontSize="50" Foreground="{Binding StyleColor}" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <TextBlock Name="TrainType" HorizontalAlignment="Left" Text="{Binding Style}" FontSize="50" Foreground="{Binding StyleColorBrush}" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" />
                 <TextBlock Name="Dest" HorizontalAlignment="Left" Text="{Binding Dest}" FontSize="50" Foreground="white" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Margin="15,0,0,0"/>
                 <TextBlock Name="ArrivalTime" HorizontalAlignment="Right" Text="{Binding Time}" FontSize="50" Foreground="White" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Margin="20,0,0,0"/>
             </StackPanel>

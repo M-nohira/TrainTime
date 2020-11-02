@@ -10,15 +10,14 @@ namespace TrainTime.ViewModels
     {
 
         private new System.Windows.Forms.NotifyIcon _icon = null;
-        public NotifyIcon()
+
+        public NotifyIcon(List<ToolStripItem> items)
         {
             _icon = new System.Windows.Forms.NotifyIcon();
 
-            ContextMenuStrip strip = new ContextMenuStrip();
-            ToolStripMenuItem item = new ToolStripMenuItem();
-            item.Text = "EXIT";
-            strip.Items.Add(item);
-            item.Click += Item_Click;
+            var strip = new ContextMenuStrip();
+            
+            strip.Items.AddRange(items.ToArray());
 
             IconText = "TEST";
             _icon.Icon = new Icon("タイトルなし.ico");
@@ -26,19 +25,14 @@ namespace TrainTime.ViewModels
             _icon.Visible = true;
         }
 
-        private void Item_Click(object sender, EventArgs e)
-        {
-            Environment.Exit(0);
-        }
-
-        private string iconText = "TrainTime";
+        private string _iconText = "TrainTime";
         public string IconText
         {
-            get { return iconText; }
-            set { _icon.Text = value; iconText = value; }
+            get { return _iconText; }
+            set { _icon.Text = value; _iconText = value; }
         }
 
-        
+
 
     }
 }

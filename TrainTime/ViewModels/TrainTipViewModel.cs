@@ -7,24 +7,34 @@ using TrainTime.Models;
 
 namespace TrainTime.ViewModels
 {
-    public class TrainTipViewModel:BindableBase
+    public class TrainTipViewModel : BindableBase
     {
         /// <summary>
-        /// Initialization
+        /// initialize of Train Tip View 
         /// </summary>
-        /// <param name="isRapid">Rapid / Local</param>
-        /// <param name="dest">Destination</param>
-        /// <param name="time">ArrivalTime</param>
-        public TrainTipViewModel(Plugin_Base.TrainStyle trainStyle,string style, string dest, DateTime time)
+        /// <param name="styleColor">Tip Border Color (Recommend to show Train Color )</param>
+        /// <param name="style">Train Style Status (普通|快速|通快)</param>
+        /// <param name="dest">Train Destination</param>
+        /// <param name="time">Departure Time</param>
+        public TrainTipViewModel(Color styleColor, string style, string dest, DateTime time)
         {
             Style = style;
-            switch(trainStyle)
-            {
-                case Plugin_Base.TrainStyle.local: StyleColor = new SolidColorBrush(Color.FromArgb(255, 0, 104, 183)); break;
-                case Plugin_Base.TrainStyle.rapid: StyleColor = new SolidColorBrush(Color.FromArgb(255, 233, 84, 100)); break;
-                case Plugin_Base.TrainStyle.commuterRapid: StyleColor = new SolidColorBrush(Colors.OrangeRed);break;
-            }
-            Dest = dest;
+            StyleColorBrush = new SolidColorBrush(styleColor);
+            DTime = time;
+            Time = time.ToString("HH:mm");
+        }
+
+        /// <summary>
+        /// initialize of Train Tip View 
+        /// </summary>
+        /// <param name="styleColor">Tip Border Color (Recommend to show Train Color )</param>
+        /// <param name="style">Train Style Status (普通|快速|通快)</param>
+        /// <param name="dest">Train Destination</param>
+        /// <param name="time">Departure Time</param>
+        public TrainTipViewModel(System.Drawing.Color styleColor, string style, string dest, DateTime time)
+        {
+            Style = style;
+            StyleColorBrush = new SolidColorBrush(Color.FromArgb(styleColor.A, styleColor.R, styleColor.G, styleColor.B));
             DTime = time;
             Time = time.ToString("HH:mm");
         }
@@ -32,7 +42,7 @@ namespace TrainTime.ViewModels
         public DateTime DTime { get; set; }
 
         private Brush styleColor = Brushes.OrangeRed;
-        public Brush StyleColor 
+        public Brush StyleColorBrush
         {
             get
             {
@@ -45,7 +55,7 @@ namespace TrainTime.ViewModels
         }
 
         private string style = "普通";
-        public string Style 
+        public string Style
         {
             get
             {
@@ -81,10 +91,10 @@ namespace TrainTime.ViewModels
             {
                 SetProperty(ref time, value);
             }
-        }    
+        }
     }
 
-    
+
 
 
 }

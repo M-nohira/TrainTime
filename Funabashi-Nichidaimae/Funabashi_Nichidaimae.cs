@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Plugin_Base;
 using AngleSharp;
 using System.Threading.Tasks;
@@ -16,11 +17,13 @@ namespace Funabashi_Nichidaimae
 
         public string StationName => "船橋日大前";
 
-        
+
         TrainTimeTable ITrainTime.GetTimeTable(bool isNextDay, bool isHoliday)
         {
-            var TimeTable = new TrainTimeTable();
-            var uri = "http://www.toyokosoku.co.jp/station/funabashinichidaimae";
+            var timeTable = new TrainTimeTable();
+            timeTable.IsHoliday = isHoliday;
+
+            const string uri = "http://www.toyokosoku.co.jp/station/funabashinichidaimae";
             var context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
             //var document = await context.OpenAsync(uri);
             var document = Task.Run(async () => await context.OpenAsync(uri)).Result;
@@ -28,24 +31,36 @@ namespace Funabashi_Nichidaimae
             var result = document.QuerySelector(query);
             var trs = result.QuerySelectorAll("tr");
 
+            
 
-            for (int count = 0; count <= trs.Length - 1; count += 2)
+            for (var count = 0; count <= trs.Length - 1; count += 2)
             {
-                List<TrainTimeDatum> datum = new List<TrainTimeDatum>();
+                var datum = new List<TrainTimeDatum>();
                 var hour = trs[count].QuerySelectorAll("td"); //最初の文字が時間
                 var minute = trs[count + 1].QuerySelectorAll("td");//分のみ
 
-                int destcnt = 1;
+                var destcnt = 1;
                 foreach (var t in minute)
                 {
                     var d = new TrainTimeDatum();
                     d.DestStationName = "中野";
-                    d.Style = TrainStyle.local;
+                    d.Style = "普通";
+                    d.StyleColor = SetColorByStyle(1);
                     if (hour[destcnt].TextContent.Contains("三")) d.DestStationName = "三鷹";
                     if (hour[destcnt].TextContent.Contains("東")) d.DestStationName = "東陽町";
-                    if (hour[destcnt].TextContent.Contains("▲")) d.Style = TrainStyle.rapid;
-                    if (hour[destcnt].TextContent.Contains("●")) d.Style = TrainStyle.commuterRapid;
-                    d.IsHoliday = isHoliday;
+                    if (hour[destcnt].TextContent.Contains("▲"))
+                    {
+                        d.Style = "快速";
+                        d.StyleColor = SetColorByStyle(2);
+                    }
+
+                    if (hour[destcnt].TextContent.Contains("●"))
+                    {
+                        d.Style = "通快";
+                        d.StyleColor = SetColorByStyle(3);
+
+                    }
+
                     var time = new DateTime();
                     if (t.TextContent.Length <= 0) continue;
 
@@ -53,45 +68,30 @@ namespace Funabashi_Nichidaimae
                     d.Time = time;
                     if (isNextDay)
                         d.Time = d.Time.AddDays(1);
-                    //datum.Add(d);
-                    TimeTable.TimeTable.Add(d);
+                    
+                    timeTable.TimeTable.Add(d);
                     destcnt++;
                 }
-                //TimeTable.TimeTable.Add(Convert.ToInt32(hour[0].TextContent), datum);
-                //TimeTable.TimeTable.Add(datum);
             }
-            return TimeTable;
+            return timeTable;
         }
 
-        
-    }
-
-    /*
-    public class TrainTimeTable : ITrainTimeTable
-    {
-        public int StationCode => 9933805;
-
-        public string StationName => "船橋日大前";
-
-        public DateTime Date { get; set; }
-
-        public List<Plugin_Base.TrainTimeDatum> TimeTable { get; set; } = new List<Plugin_Base.TrainTimeDatum>();
-    }
-    */
-        /*
-        public class TrainTimeDatum : ITrainTimeDatum
+        /// <summary>
+        /// 色を設定する
+        /// </summary>
+        /// <param name="id_Style">1 = 普通, 2 = 快速, 3 = 通快</param>
+        /// <returns>色</returns>
+        private Color SetColorByStyle(int id_Style)
         {
-            public bool IsHoliday { get; set; }
-
-            public DateTime Time { get; set; }
-
-            public int DestStationCode { get; set; }
-
-            public string DestStationName { get; set; }
-
-            public TrainStyle Style { get; set; }
-
+            switch (id_Style)
+            {
+                case 1: return Color.FromArgb(255, 0, 104, 183);
+                case 2: return Color.FromArgb(255, 233, 84, 100);
+                case 3: return Color.OrangeRed;
+                case 4: return Color.Yellow;
+            }
+            return  Color.OrangeRed;
         }
-        `*/
-}
 
+    }
+}
