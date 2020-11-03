@@ -88,12 +88,12 @@ namespace TrainTime.ViewModels
 
            
             var item = new ToolStripMenuItem
-            { Text = "EXIT" };
+            { Text = "終了" };
             item.Click += (sender, e) => { Environment.Exit(0); };
 
-            items.Add(item);
             items.AddRange(SetToolStripMenu());
-
+            items.Add(item);
+            
             NotifyIcon icon = new NotifyIcon(items);
 
             worker = new System.Timers.Timer(500);
@@ -119,7 +119,14 @@ namespace TrainTime.ViewModels
                 item.CheckedChanged += (sender, args) =>
                 {
                     var obj = (ToolStripMenuItem) sender;
-                    SetTimeTableFromWeb = Plugin_Incetance.Where(x => x.Name == obj.Name).ToList()[0].GetTimeTable;
+
+                    Plugin_Incetance.ForEach(ins =>
+                    {
+                        if (ins.Name == obj.Name) SetTimeTableFromWeb = ins.GetTimeTable;
+                    });
+
+                    Invoke(() => TrainPanel.Clear());
+                    Initialize();
                 };
                 result.Add(item);
             });

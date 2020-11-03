@@ -5,16 +5,19 @@ using System.Text;
 using Plugin_Base;
 using System.Threading.Tasks;
 
+
 namespace Plugin_Base
 {
     public interface ITrainTime
     {
         string Name { get; }
-    
         
+        string TrainLineName { get; }
         string Description { get; }
+
         int StationCode { get; }
         string StationName { get; }
+        string TrainDirection { get; }
 
         TrainTimeTable GetTimeTable(bool isNextDay, bool isHoliday);
         //object GetTimeTable();

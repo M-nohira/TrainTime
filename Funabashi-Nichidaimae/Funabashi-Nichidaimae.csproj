@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Funabashi_Nichidaimae</RootNamespace>
+    <AssemblyName>Funabashi-Nichidaimae</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -15,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Plugin_Base\Plugin_Base.csproj" />
+    <ProjectReference Include="..\TokyoStatin_Akihabara\TokyoStation_Yamanote_Inside.csproj" />
     <ProjectReference Include="..\TrainTime\TrainTime.csproj" />
   </ItemGroup>
 

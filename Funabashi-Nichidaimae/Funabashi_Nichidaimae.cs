@@ -9,7 +9,7 @@ namespace Funabashi_Nichidaimae
 {
     public class Funabashi_Nichidaimae : Plugin_Base.ITrainTime
     {
-        public string Name => "船橋日大前プラグイン";
+        public string Name => "船橋日大前";
 
         public string Description => "船橋日大前駅用の時刻表取得プラグイン";
 
@@ -17,6 +17,9 @@ namespace Funabashi_Nichidaimae
 
         public string StationName => "船橋日大前";
 
+        public string TrainLineName => "東葉高速鉄道";
+
+        public string TrainDirection => "三鷹,中野行き";
 
         TrainTimeTable ITrainTime.GetTimeTable(bool isNextDay, bool isHoliday)
         {
